@@ -1,7 +1,7 @@
 on:
     push:
       branches:
-        - 'master'
+        - 'main'
       tags:
         - 'v*.*.*'
   
@@ -19,7 +19,7 @@ jobs:
           uses: docker/metadata-action@v3
           with:
             images: |
-              ngoduykhanh/powerdns-admin
+              dsolopenkov/powerdns-admin
             tags: |
               type=ref,event=tag
               type=semver,pattern={{version}}
