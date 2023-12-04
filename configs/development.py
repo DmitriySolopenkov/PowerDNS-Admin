@@ -7,6 +7,7 @@ SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
 SECRET_KEY = 'e951e5a1f4b94151b360f47edf596dd2'
 BIND_ADDRESS = '0.0.0.0'
 PORT = 9191
+SERVER_EXTERNAL_SSL = None
 
 ### DATABASE CONFIG
 SQLA_DB_USER = 'pda'
@@ -27,7 +28,17 @@ CAPTCHA_SESSION_KEY = 'captcha_image'
 SESSION_TYPE = 'sqlalchemy'
 
 ### DATABASE - MySQL
+## Don't forget to uncomment the import in the top
 #SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(
+#    urllib.parse.quote_plus(SQLA_DB_USER),
+#    urllib.parse.quote_plus(SQLA_DB_PASSWORD),
+#    SQLA_DB_HOST,
+#    SQLA_DB_NAME
+#)
+
+### DATABASE - PostgreSQL
+## Don't forget to uncomment the import in the top
+#SQLALCHEMY_DATABASE_URI = 'postgres://{}:{}@{}/{}'.format(
 #    urllib.parse.quote_plus(SQLA_DB_USER),
 #    urllib.parse.quote_plus(SQLA_DB_PASSWORD),
 #    SQLA_DB_HOST,
