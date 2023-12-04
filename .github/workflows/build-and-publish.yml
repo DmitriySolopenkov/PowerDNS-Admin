@@ -43,7 +43,7 @@ jobs:
             context: ./
             file: ./docker/Dockerfile
             push: true
-            tags: ngoduykhanh/powerdns-admin:latest
+            tags: dsolopenkov/powerdns-admin:latest
   
         - name: Build release image
           uses: docker/build-push-action@v2
