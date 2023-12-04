@@ -2,6 +2,7 @@ import json
 import re
 import traceback
 from flask import current_app
+from flask_login import current_user
 from urllib.parse import urljoin
 from distutils.util import strtobool
 
@@ -20,7 +21,7 @@ class Domain(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True, unique=True)
     master = db.Column(db.String(128))
-    type = db.Column(db.String(6), nullable=False)
+    type = db.Column(db.String(8), nullable=False)
     serial = db.Column(db.BigInteger)
     notified_serial = db.Column(db.BigInteger)
     last_check = db.Column(db.Integer)
@@ -109,6 +110,22 @@ class Domain(db.Model):
             current_app.logger.error(
                 'Domain does not exist. ERROR: {0}'.format(e))
             return None
+
+    def search_idn_domains(self, search_string):
+        """
+        Search for IDN domains using the provided search string.
+        """
+        # Compile the regular expression pattern for matching IDN domain names
+        idn_pattern = re.compile(r'^xn--')
+
+        # Search for domain names that match the IDN pattern
+        idn_domains = [
+            domain for domain in self.get_domains() if idn_pattern.match(domain)
+        ]
+
+        # Filter the search results based on the provided search string
+        return [domain for domain in idn_domains if search_string in domain]
+
 
     def update(self):
         """
@@ -532,11 +549,12 @@ class Domain(db.Model):
         domain.apikeys[:] = []
 
         # Remove history for domain
-        domain_history = History.query.filter(
-            History.domain_id == domain.id
-        )
-        if domain_history:
-           domain_history.delete()
+        if not Setting().get('preserve_history'):
+            domain_history = History.query.filter(
+                History.domain_id == domain.id
+            )
+            if domain_history:
+                domain_history.delete()
 
         # then remove domain
         Domain.query.filter(Domain.name == domain_name).delete()
@@ -835,6 +853,7 @@ class Domain(db.Model):
 
         headers = {'X-API-Key': self.PDNS_API_KEY, 'Content-Type': 'application/json'}
 
+        account_name_old = Account().get_name_by_id(domain.account_id)
         account_name = Account().get_name_by_id(account_id)
 
         post_data = {"account": account_name}
@@ -858,6 +877,13 @@ class Domain(db.Model):
                     self.update()
                 msg_str = 'Account changed for domain {0} successfully'
                 current_app.logger.info(msg_str.format(domain_name))
+                history = History(msg='Update domain {0} associate account {1}'.format(domain.name, 'none' if account_name == '' else account_name),
+                              detail = json.dumps({
+                                    'assoc_account': 'None' if account_name == '' else account_name,
+                                    'dissoc_account': 'None' if account_name_old == '' else account_name_old
+                                }),
+                              created_by=current_user.username)
+                history.add()
                 return {'status': 'ok', 'msg': 'account changed successfully'}
 
         except Exception as e:

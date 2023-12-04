@@ -7,7 +7,6 @@ SALT = '$2b$12$yLUMTIfl21FKJQpTkRQXCu'
 SECRET_KEY = 'e951e5a1f4b94151b360f47edf596dd2'
 BIND_ADDRESS = '0.0.0.0'
 PORT = 9191
-OFFLINE_MODE = False
 
 ### DATABASE CONFIG
 SQLA_DB_USER = 'pda'
@@ -15,6 +14,17 @@ SQLA_DB_PASSWORD = 'changeme'
 SQLA_DB_HOST = '127.0.0.1'
 SQLA_DB_NAME = 'pda'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
+
+#CAPTCHA Config
+CAPTCHA_ENABLE = True
+CAPTCHA_LENGTH = 6
+CAPTCHA_WIDTH = 160
+CAPTCHA_HEIGHT = 60
+CAPTCHA_SESSION_KEY = 'captcha_image'
+
+#Server side sessions tracking
+#Set to TRUE for CAPTCHA, or enable another stateful session tracking system
+SESSION_TYPE = 'sqlalchemy'
 
 ### DATABASE - MySQL
 #SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(

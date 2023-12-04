@@ -11,7 +11,7 @@ from .base import db
 
 class Setting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64))
+    name = db.Column(db.String(64), unique=True, index=True)
     value = db.Column(db.Text())
 
     defaults = {
@@ -31,6 +31,7 @@ class Setting(db.Model):
 	    'delete_sso_accounts': False,
         'bg_domain_updates': False,
         'enable_api_rr_history': True,
+        'preserve_history': False,
         'site_name': 'PowerDNS-Admin',
         'site_url': 'http://localhost:9191',
         'session_timeout': 10,
@@ -103,6 +104,7 @@ class Setting(db.Model):
         'oidc_oauth_api_url': '',
         'oidc_oauth_token_url': '',
         'oidc_oauth_authorize_url': '',
+        'oidc_oauth_metadata_url': '',
         'oidc_oauth_logout_url': '',
         'oidc_oauth_username': 'preferred_username',
         'oidc_oauth_firstname': 'given_name',
@@ -193,7 +195,8 @@ class Setting(db.Model):
         'otp_force': False,
         'max_history_records': 1000,
         'deny_domain_override': False,
-        'account_name_extra_chars': False
+        'account_name_extra_chars': False,
+        'gravatar_enabled': False,
     }
 
     def __init__(self, id=None, name=None, value=None):

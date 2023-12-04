@@ -34,6 +34,7 @@ class User(db.Model):
     otp_secret = db.Column(db.String(16))
     confirmed = db.Column(db.SmallInteger, nullable=False, default=0)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
+    role = db.relationship('Role', back_populates="users", lazy=True)
     accounts = None
 
     def __init__(self,
@@ -94,7 +95,7 @@ class User(db.Model):
 
     def verify_totp(self, token):
         totp = pyotp.TOTP(self.otp_secret)
-        return totp.verify(token)
+        return totp.verify(token, valid_window = 5)
 
     def get_hashed_password(self, plain_text_password=None):
         # Hash a password for the first time
@@ -107,9 +108,10 @@ class User(db.Model):
 
     def check_password(self, hashed_password):
         # Check hashed password. Using bcrypt, the salt is saved into the hash itself
-        if (self.plain_text_password):
-            return bcrypt.checkpw(self.plain_text_password.encode('utf-8'),
-                                  hashed_password.encode('utf-8'))
+        if hasattr(self, "plain_text_password"):
+            if self.plain_text_password != None:
+                return bcrypt.checkpw(self.plain_text_password.encode('utf-8'),
+                                     hashed_password.encode('utf-8'))
         return False
 
     def get_user_info_by_id(self):
@@ -125,7 +127,6 @@ class User(db.Model):
         conn = ldap.initialize(Setting().get('ldap_uri'))
         conn.set_option(ldap.OPT_REFERRALS, ldap.OPT_OFF)
         conn.set_option(ldap.OPT_PROTOCOL_VERSION, 3)
-        conn.set_option(ldap.OPT_X_TLS, ldap.OPT_X_TLS_DEMAND)
         conn.set_option(ldap.OPT_X_TLS_DEMAND, True)
         conn.set_option(ldap.OPT_DEBUG_LEVEL, 255)
         conn.protocol_version = ldap.VERSION3
@@ -422,8 +423,12 @@ class User(db.Model):
             self.role_id = Role.query.filter_by(
                 name='Administrator').first().id
 
-        self.password = self.get_hashed_password(
-            self.plain_text_password) if self.plain_text_password else '*'
+        if hasattr(self, "plain_text_password"):
+            if self.plain_text_password != None:
+                self.password = self.get_hashed_password(
+                    self.plain_text_password)
+        else:
+            self.password = '*'
 
         if self.password and self.password != '*':
             self.password = self.password.decode("utf-8")
@@ -459,9 +464,10 @@ class User(db.Model):
         user.email = self.email
 
         # store new password hash (only if changed)
-        if self.plain_text_password:
-            user.password = self.get_hashed_password(
-                self.plain_text_password).decode("utf-8")
+        if hasattr(self, "plain_text_password"):
+            if self.plain_text_password != None:
+                user.password = self.get_hashed_password(
+                    self.plain_text_password).decode("utf-8")
 
         db.session.commit()
         return {'status': True, 'msg': 'User updated successfully'}
@@ -476,9 +482,11 @@ class User(db.Model):
 
         user.firstname = self.firstname if self.firstname else user.firstname
         user.lastname = self.lastname if self.lastname else user.lastname
-        user.password = self.get_hashed_password(
-            self.plain_text_password).decode(
-                "utf-8") if self.plain_text_password else user.password
+
+        if hasattr(self, "plain_text_password"):
+            if self.plain_text_password != None:
+                user.password = self.get_hashed_password(
+                 self.plain_text_password).decode("utf-8")
 
         if self.email:
             # Can not update to a new email that
